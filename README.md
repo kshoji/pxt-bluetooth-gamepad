@@ -41,8 +41,6 @@ Mac OS X can connect with `micro:bit`, but it can't receive Gamepad messages.
 
 MIT
 
-icon.png : copyright By Darkone - Own work, CC BY-SA 2.5, https://commons.wikimedia.org/w/index.php?curid=235633
-
 ```package
 bluetooth
 bluetooth-gamepad=github:kshoji/pxt-bluetooth-gamepad
