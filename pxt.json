@@ -1,0 +1,42 @@
+{
+    "name": "bluetooth-gamepad",
+    "version": "0.0.1",
+    "description": "A Bluetooth Gamepad service",
+    "license": "MIT",
+    "dependencies": {
+        "core": "*",
+        "bluetooth": "*"
+    },
+    "_comment": {
+        "To build the test script(test.ts), Activate these lines below.": "The micro:bit's heap space is too small to run the test script.",
+        "yotta": {
+            "config": {
+                "microbit-dal": {
+                    "bluetooth": {
+                        "dfu_service": 0,
+                        "event_service": 0,
+                        "device_info_service": 0,
+                        "security_level": "SECURITY_MODE_ENCRYPTION_NO_MITM"
+                    },
+                    "gatt_table_size": "0x400"
+                }
+            }
+        }
+    },
+    "files": [
+        "README.md",
+        "bluetooth.ts",
+        "BluetoothGamepadService.cpp",
+        "BluetoothGamepadService.h",
+        "HIDDeviceInformationService.h",
+        "HIDBatteryService.h",
+        "USBHID_Types.h",
+        "gamepad.cpp",
+        "shims.d.ts",
+        "enums.d.ts"
+    ],
+    "testFiles": [
+        "tests.ts"
+    ],
+    "public": true
+}
