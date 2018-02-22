@@ -30,16 +30,14 @@ static const uint8_t REPORT_MAP[] = {
     USAGE(1), 0x05,                     // Game Pad
     COLLECTION(1), 0x01,                // Collection: Application
         REPORT_ID(1), 0x01,             // Report ID 1
-        COLLECTION(1), 0x00,            // Collection: Physical
-            USAGE_PAGE(1), 0x09,        // Button
-            USAGE_MINIMUM(1), 0x01,     // Button 1
-            USAGE_MAXIMUM(1), 0x08,     // Button 8
-            LOGICAL_MINIMUM(1), 0x00,   // Logical Min: 0
-            LOGICAL_MAXIMUM(1), 0x01,   // Logical Max: 1
-            REPORT_COUNT(1), 0x08,      // 8 Buttons
-            REPORT_SIZE(1), 0x01,       // 1 Bit per button
-            INPUT(1), 0x02,             // Data, Variable, Absolute
-        END_COLLECTION(0),
+        USAGE_PAGE(1), 0x09,            // Button
+        USAGE_MINIMUM(1), 0x01,         // Button 1
+        USAGE_MAXIMUM(1), 0x08,         // Button 8
+        LOGICAL_MINIMUM(1), 0x00,       // Logical Min: 0
+        LOGICAL_MAXIMUM(1), 0x01,       // Logical Max: 1
+        REPORT_COUNT(1), 0x08,          // 8 Buttons
+        REPORT_SIZE(1), 0x01,           // 1 Bit per button
+        INPUT(1), 0x02,                 // Data, Variable, Absolute
     END_COLLECTION(0),
 };
 
@@ -94,15 +92,14 @@ void BluetoothGamepadService::startService()
                                                                           &protocolMode, 1, 1,
                                                                           GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ | GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE_WITHOUT_RESPONSE);
 
-    GattAttribute inputNotifyDescriptor(BLE_UUID_DESCRIPTOR_CLIENT_CHARACTERISTIC_CONFIGURATION, const_cast<uint8_t *>(ENABLE_NOTIFICATION_VALUE), 2, 2, false);
     GattAttribute inputReportDescriptor(BLE_UUID_DESCRIPTOR_REPORT_REFERENCE, const_cast<uint8_t *>(INPUT_DESCRIPTOR_REPORT), 2, 2, false);
-    GattAttribute *inputReportDescriptors[] = { &inputReportDescriptor, &inputNotifyDescriptor };
+    GattAttribute *inputReportDescriptors[] = { &inputReportDescriptor };
     GattCharacteristic inputReportCharacteristic(GattCharacteristic::UUID_REPORT_CHAR,
                                                  inputReportData, sizeof(inputReportData), sizeof(inputReportData),
                                                  GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ |
                                                      GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY |
                                                      GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE,
-                                                 inputReportDescriptors, 2, false);
+                                                 inputReportDescriptors, 1, false);
 
     GattCharacteristic reportMapCharacteristic(GattCharacteristic::UUID_REPORT_MAP_CHAR,
                                 const_cast<uint8_t *>(REPORT_MAP), sizeof(REPORT_MAP), sizeof(REPORT_MAP),
@@ -190,19 +187,18 @@ void BluetoothGamepadService::stopReportTicker()
 
 void BluetoothGamepadService::onDataSent(unsigned count)
 {
-    startReportTicker();
 }
 
 void BluetoothGamepadService::onConnection(const Gap::ConnectionCallbackParams_t *params)
 {
     ble.gap().stopAdvertising();
+    buttonsState = 0;
     connected = true;
 }
 
 void BluetoothGamepadService::onDisconnection(const Gap::DisconnectionCallbackParams_t *params)
 {
     connected = false;
-    stopReportTicker();
     startAdvertise();
 }
 
@@ -219,11 +215,6 @@ void BluetoothGamepadService::setButton(GamepadButton button, ButtonState state)
     {
         buttonsState |= button;
     }
-    if (connected == false)
-    {
-        return;
-    }
-
     startReportTicker();
 }
 
@@ -231,12 +222,6 @@ void BluetoothGamepadService::sendCallback()
 {
     if (!connected)
     {
-        return;
-    }
-
-    if (inputReportData[0] == 0 && buttonsState == 0)
-    {
-        stopReportTicker();
         return;
     }
 
