@@ -6,8 +6,7 @@
 #include "ble/GapAdvertisingData.h"
 #include "ble/GattService.h"
 #include "ble/GattCharacteristic.h"
-#if !CONFIG_ENABLED(MICROBIT_BLE_DFU_SERVICE)
-#include "HIDBatteryService.h"
+#if !CONFIG_ENABLED(MICROBIT_BLE_DEVICE_INFORMATION_SERVICE)
 #include "HIDDeviceInformationService.h"
 #endif
 #include "BluetoothGamepadService.h"
@@ -30,21 +29,24 @@ static const uint8_t REPORT_MAP[] = {
     USAGE(1), 0x05,                     // Game Pad
     COLLECTION(1), 0x01,                // Collection: Application
         REPORT_ID(1), 0x01,             // Report ID 1
-        USAGE_PAGE(1), 0x09,            // Button
-        USAGE_MINIMUM(1), 0x01,         // Button 1
-        USAGE_MAXIMUM(1), 0x08,         // Button 8
-        LOGICAL_MINIMUM(1), 0x00,       // Logical Min: 0
-        LOGICAL_MAXIMUM(1), 0x01,       // Logical Max: 1
-        REPORT_COUNT(1), 0x08,          // 8 Buttons
-        REPORT_SIZE(1), 0x01,           // 1 Bit per button
-        INPUT(1), 0x02,                 // Data, Variable, Absolute
+        COLLECTION(1), 0x02,            // Collection: Logical
+            USAGE_PAGE(1), 0x09,            // Button
+            USAGE_MINIMUM(1), 0x01,         // Button 1
+            USAGE_MAXIMUM(1), 0x08,         // Button 8
+            LOGICAL_MINIMUM(1), 0x00,       // Logical Min: 0
+            LOGICAL_MAXIMUM(1), 0x01,       // Logical Max: 1
+            REPORT_COUNT(1), 0x08,          // 8 Buttons
+            REPORT_SIZE(1), 0x01,           // 1 Bit per button
+            INPUT(1), 0x02,                 // Data, Variable, Absolute
+        END_COLLECTION(0),
     END_COLLECTION(0),
 };
 
 static const uint8_t emptyInputReportData[] = {0};
 
 static const uint8_t ENABLE_NOTIFICATION_VALUE[] = {0x01, 0x00};
-static const uint8_t INPUT_DESCRIPTOR_REPORT[] = {0x00, 0x01};
+static const uint8_t INPUT_DESCRIPTOR_REPORT[] = {0x01, 0x01};
+static const uint8_t REPORT_MAP_EXTERNAL_REPORT[] = {0x2A, 0x19};
 }
 
 static bool isInitializedService = false;
@@ -73,10 +75,7 @@ void BluetoothGamepadService::startService()
     ble.init();
     ble.securityManager().init(true, false, SecurityManager::IO_CAPS_NONE);
 
-#if !CONFIG_ENABLED(MICROBIT_BLE_DFU_SERVICE)
-    // Battery Service
-    HIDBatteryService batteryService(ble, 100);
-
+#if !CONFIG_ENABLED(MICROBIT_BLE_DEVICE_INFORMATION_SERVICE)
     // Device Information Service
     PnPID_t pnpID;
     pnpID.vendorID_source = 0x2;
@@ -99,11 +98,14 @@ void BluetoothGamepadService::startService()
                                                  GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ |
                                                      GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_NOTIFY |
                                                      GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE,
-                                                 inputReportDescriptors, 1, false);
+                                                 inputReportDescriptors, 1);
 
+    GattAttribute reportMapExternalReportDescriptor(BLE_UUID_DESCRIPTOR_EXTERNAL_REPORT_REFERENCE, const_cast<uint8_t *>(REPORT_MAP_EXTERNAL_REPORT), 2, 2, false);
+    GattAttribute *reportMapDescriptors[] = { &reportMapExternalReportDescriptor };
     GattCharacteristic reportMapCharacteristic(GattCharacteristic::UUID_REPORT_MAP_CHAR,
-                                const_cast<uint8_t *>(REPORT_MAP), sizeof(REPORT_MAP), sizeof(REPORT_MAP),
-                                GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ);
+                                                const_cast<uint8_t *>(REPORT_MAP), sizeof(REPORT_MAP), sizeof(REPORT_MAP),
+                                                GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_READ,
+                                                reportMapDescriptors, 1);
 
     GattCharacteristic hidInformationCharacteristic(GattCharacteristic::UUID_HID_INFORMATION_CHAR,
                                                                              const_cast<uint8_t *>(RESPONSE_HID_INFORMATION), sizeof(RESPONSE_HID_INFORMATION), sizeof(RESPONSE_HID_INFORMATION),
@@ -113,29 +115,36 @@ void BluetoothGamepadService::startService()
                                                                               &controlPointCommand, 1, 1,
                                                                               GattCharacteristic::BLE_GATT_CHAR_PROPERTIES_WRITE_WITHOUT_RESPONSE);
 
+    GattCharacteristic *gamepadCharacteristics[]{
+        &reportMapCharacteristic,
+        &protocolModeCharacteristic,
+        &hidControlPointCharacteristic,
+        &hidInformationCharacteristic,
+        &inputReportCharacteristic,
+    };
+
+    GattService gamepadService(GattService::UUID_HUMAN_INTERFACE_DEVICE_SERVICE, gamepadCharacteristics, sizeof(gamepadCharacteristics) / sizeof(GattCharacteristic *));
+
+    ble.gattServer().addService(gamepadService);
+
     protocolModeCharacteristic.requireSecurity(SecurityManager::SECURITY_MODE_ENCRYPTION_NO_MITM);
     inputReportCharacteristic.requireSecurity(SecurityManager::SECURITY_MODE_ENCRYPTION_NO_MITM);
     reportMapCharacteristic.requireSecurity(SecurityManager::SECURITY_MODE_ENCRYPTION_NO_MITM);
     hidInformationCharacteristic.requireSecurity(SecurityManager::SECURITY_MODE_ENCRYPTION_NO_MITM);
     hidControlPointCharacteristic.requireSecurity(SecurityManager::SECURITY_MODE_ENCRYPTION_NO_MITM);
 
-    GattCharacteristic *gamepadCharacteristics[]{
-        &hidInformationCharacteristic,
-        &reportMapCharacteristic,
-        &protocolModeCharacteristic,
-        &hidControlPointCharacteristic,
-        &inputReportCharacteristic};
-
     inputReportValueHandle = inputReportCharacteristic.getValueHandle();
 
     ble.gap().onConnection(this, &BluetoothGamepadService::onConnection);
     ble.gap().onDisconnection(this, &BluetoothGamepadService::onDisconnection);
 
-    GattService gamepadService(GattService::UUID_HUMAN_INTERFACE_DEVICE_SERVICE, gamepadCharacteristics, sizeof(gamepadCharacteristics) / sizeof(GattCharacteristic *));
-
-    ble.gattServer().addService(gamepadService);
-
     ble.gattServer().onDataSent(this, &BluetoothGamepadService::onDataSent);
+    ble.gattServer().onDataWritten(this, &BluetoothGamepadService::onDataWritten);
+    ble.gattServer().onDataRead(this, &BluetoothGamepadService::onDataRead);
+    ble.gattServer().onSysAttrMissing(this, &BluetoothGamepadService::onSysAttrMissing);
+    ble.gattServer().onUpdatesEnabled(&onUpdatesEnabled);
+
+    startReportTicker();
 }
 
 void BluetoothGamepadService::startAdvertise()
@@ -215,7 +224,6 @@ void BluetoothGamepadService::setButton(GamepadButton button, ButtonState state)
     {
         buttonsState |= button;
     }
-    startReportTicker();
 }
 
 void BluetoothGamepadService::sendCallback()
