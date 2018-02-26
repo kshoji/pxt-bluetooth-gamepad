@@ -18,8 +18,7 @@ namespace
 static const uint8_t RESPONSE_HID_INFORMATION[] = {0x11, 0x01, 0x00, 0x03};
 
 static const uint16_t uuid16_list[] = {GattService::UUID_HUMAN_INTERFACE_DEVICE_SERVICE,
-                                       GattService::UUID_DEVICE_INFORMATION_SERVICE,
-                                       GattService::UUID_BATTERY_SERVICE};
+                                       GattService::UUID_DEVICE_INFORMATION_SERVICE};
 
 /**
  * Characteristic Data(Report Map)
