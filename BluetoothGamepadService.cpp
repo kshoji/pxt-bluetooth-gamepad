@@ -138,10 +138,6 @@ void BluetoothGamepadService::startService()
     ble.gap().onDisconnection(this, &BluetoothGamepadService::onDisconnection);
 
     ble.gattServer().onDataSent(this, &BluetoothGamepadService::onDataSent);
-    ble.gattServer().onDataWritten(this, &BluetoothGamepadService::onDataWritten);
-    ble.gattServer().onDataRead(this, &BluetoothGamepadService::onDataRead);
-    ble.gattServer().onSysAttrMissing(this, &BluetoothGamepadService::onSysAttrMissing);
-    ble.gattServer().onUpdatesEnabled(&onUpdatesEnabled);
 
     startReportTicker();
 }
