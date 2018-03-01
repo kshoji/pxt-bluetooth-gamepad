@@ -69,6 +69,9 @@ class BluetoothGamepadService
 
     uint8_t buttonsState;
 
+    int8_t axisX;
+    int8_t axisY;
+
     void onConnection(const Gap::ConnectionCallbackParams_t *params);
     void onDisconnection(const Gap::DisconnectionCallbackParams_t *params);
 
@@ -77,8 +80,6 @@ class BluetoothGamepadService
     void startReportTicker();
 
     void stopReportTicker();
-
-    void onDataSent(unsigned count);
 
     void sendCallback();
 

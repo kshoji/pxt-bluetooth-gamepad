@@ -27,23 +27,34 @@ static const uint8_t REPORT_MAP[] = {
     USAGE_PAGE(1), 0x01,                // Generic Desktop
     USAGE(1), 0x05,                     // Game Pad
     COLLECTION(1), 0x01,                // Collection: Application
-        REPORT_ID(1), 0x01,             // Report ID 1
-        COLLECTION(1), 0x02,            // Collection: Logical
+        COLLECTION(1), 0x00,            // Collection: Physical
+            REPORT_ID(1), 0x01,             // Report ID 1
+
+            // axes
+            USAGE_PAGE(1), 0x01,            // Generic Desktop
+            USAGE(1), 0x30,                 // X
+            USAGE(1), 0x31,                 // Y
+            LOGICAL_MINIMUM(1), 0xff,       // Logical Min: -1
+            LOGICAL_MAXIMUM(1), 0x01,       // Logical Max: 1
+            REPORT_SIZE(1), 0x02,           // 1 Bit per axis
+            REPORT_COUNT(1), 0x02,          // 2 axes
+            INPUT(1), 0x02,                 // Data, Variable, Absolute
+
+            // buttons
             USAGE_PAGE(1), 0x09,            // Button
-            USAGE_MINIMUM(1), 0x01,         // Button 1
-            USAGE_MAXIMUM(1), 0x08,         // Button 8
+            USAGE(1), 0x01,                 // Button A
+            USAGE(1), 0x02,                 // Button B
+            USAGE(1), 0x0b,                 // Select
+            USAGE(1), 0x0c,                 // Start
             LOGICAL_MINIMUM(1), 0x00,       // Logical Min: 0
             LOGICAL_MAXIMUM(1), 0x01,       // Logical Max: 1
-            REPORT_COUNT(1), 0x08,          // 8 Buttons
             REPORT_SIZE(1), 0x01,           // 1 Bit per button
+            REPORT_COUNT(1), 0x04,          // 4 Buttons
             INPUT(1), 0x02,                 // Data, Variable, Absolute
         END_COLLECTION(0),
     END_COLLECTION(0),
 };
 
-static const uint8_t emptyInputReportData[] = {0};
-
-static const uint8_t ENABLE_NOTIFICATION_VALUE[] = {0x01, 0x00};
 static const uint8_t INPUT_DESCRIPTOR_REPORT[] = {0x01, 0x01};
 static const uint8_t REPORT_MAP_EXTERNAL_REPORT[] = {0x2A, 0x19};
 }
@@ -137,8 +148,6 @@ void BluetoothGamepadService::startService()
     ble.gap().onConnection(this, &BluetoothGamepadService::onConnection);
     ble.gap().onDisconnection(this, &BluetoothGamepadService::onDisconnection);
 
-    ble.gattServer().onDataSent(this, &BluetoothGamepadService::onDataSent);
-
     startReportTicker();
 }
 
@@ -189,10 +198,6 @@ void BluetoothGamepadService::stopReportTicker()
     reportTickerIsActive = false;
 }
 
-void BluetoothGamepadService::onDataSent(unsigned count)
-{
-}
-
 void BluetoothGamepadService::onConnection(const Gap::ConnectionCallbackParams_t *params)
 {
     ble.gap().stopAdvertising();
@@ -228,7 +233,46 @@ void BluetoothGamepadService::sendCallback()
         return;
     }
 
-    inputReportData[0] = buttonsState;
+    // buttons
+    inputReportData[0] = buttonsState & 0xf0;
+
+    // axis
+    axisX = 0;
+    axisY = 0;
+    if (buttonsState & GAMEPAD_BUTTON_LEFT)
+    {
+        axisX--;
+    }
+    if (buttonsState & GAMEPAD_BUTTON_RIGHT)
+    {
+        axisX++;
+    }
+    if (buttonsState & GAMEPAD_BUTTON_UP)
+    {
+        axisY--;
+    }
+    if (buttonsState & GAMEPAD_BUTTON_DOWN)
+    {
+        axisY++;
+    }
+    switch (axisX)
+    {
+        case -1: // left
+            inputReportData[0] |= 0x03;
+            break;
+        case 1: // right
+            inputReportData[0] |= 0x01;
+            break;
+    }
+    switch (axisY)
+    {
+        case -1: // up
+            inputReportData[0] |= 0x0c;
+            break;
+        case 1: // down
+            inputReportData[0] |= 0x04;
+            break;
+    }
 
     ble.gattServer().write(inputReportValueHandle, inputReportData, 1);
 }

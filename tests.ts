@@ -51,36 +51,36 @@ control.onEvent(DAL.MICROBIT_ID_IO_P8, DAL.MICROBIT_PIN_EVT_FALL, () => {
     bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_DOWN, ButtonState.BUTTON_DOWN)
 })
 
-// X
-control.onEvent(DAL.MICROBIT_ID_IO_P16, DAL.MICROBIT_PIN_EVT_RISE, () => {
-    bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_SELECT, ButtonState.BUTTON_UP)
-})
-control.onEvent(DAL.MICROBIT_ID_IO_P16, DAL.MICROBIT_PIN_EVT_FALL, () => {
-    bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_SELECT, ButtonState.BUTTON_DOWN)
-})
-
-// Y
-control.onEvent(DAL.MICROBIT_ID_IO_P12, DAL.MICROBIT_PIN_EVT_RISE, () => {
-    bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_START, ButtonState.BUTTON_UP)
-})
-control.onEvent(DAL.MICROBIT_ID_IO_P12, DAL.MICROBIT_PIN_EVT_FALL, () => {
-    bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_START, ButtonState.BUTTON_DOWN)
-})
-
 // A
-control.onEvent(DAL.MICROBIT_ID_IO_P5, DAL.MICROBIT_PIN_EVT_RISE, () => {
+control.onEvent(DAL.MICROBIT_ID_IO_P16, DAL.MICROBIT_PIN_EVT_RISE, () => {
     bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_A, ButtonState.BUTTON_UP)
 })
-control.onEvent(DAL.MICROBIT_ID_IO_P5, DAL.MICROBIT_PIN_EVT_FALL, () => {
+control.onEvent(DAL.MICROBIT_ID_IO_P16, DAL.MICROBIT_PIN_EVT_FALL, () => {
     bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_A, ButtonState.BUTTON_DOWN)
 })
 
 // B
-control.onEvent(DAL.MICROBIT_ID_IO_P11, DAL.MICROBIT_PIN_EVT_RISE, () => {
+control.onEvent(DAL.MICROBIT_ID_IO_P12, DAL.MICROBIT_PIN_EVT_RISE, () => {
     bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_B, ButtonState.BUTTON_UP)
 })
-control.onEvent(DAL.MICROBIT_ID_IO_P11, DAL.MICROBIT_PIN_EVT_FALL, () => {
+control.onEvent(DAL.MICROBIT_ID_IO_P12, DAL.MICROBIT_PIN_EVT_FALL, () => {
     bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_B, ButtonState.BUTTON_DOWN)
+})
+
+// select
+control.onEvent(DAL.MICROBIT_ID_IO_P5, DAL.MICROBIT_PIN_EVT_RISE, () => {
+    bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_SELECT, ButtonState.BUTTON_UP)
+})
+control.onEvent(DAL.MICROBIT_ID_IO_P5, DAL.MICROBIT_PIN_EVT_FALL, () => {
+    bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_SELECT, ButtonState.BUTTON_DOWN)
+})
+
+// start
+control.onEvent(DAL.MICROBIT_ID_IO_P11, DAL.MICROBIT_PIN_EVT_RISE, () => {
+    bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_START, ButtonState.BUTTON_UP)
+})
+control.onEvent(DAL.MICROBIT_ID_IO_P11, DAL.MICROBIT_PIN_EVT_FALL, () => {
+    bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_START, ButtonState.BUTTON_DOWN)
 })
 
 // Bluetooth connection indicator
@@ -92,5 +92,5 @@ bluetooth.onBluetoothDisconnected(() => {
     basic.showString("D")
 })
 
-bluetooth.startGamepadService();
+bluetooth.startGamepadService()
 basic.showString("S")

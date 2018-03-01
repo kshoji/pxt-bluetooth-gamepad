@@ -6,19 +6,18 @@ namespace bluetooth {
     //% block="bluetooth start gamepad service"
     //% parts="bluetooth"
     export function startGamepadService() {
-        bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_LEFT, ButtonState.BUTTON_UP);
+        bluetooth.setGamepadButton(GamepadButton.GAMEPAD_BUTTON_LEFT, ButtonState.BUTTON_UP)
     }
 
     /**
      * Sets a Gamepad button
      */
-    //% blockId="bluetooth_gamepad_set_speed"
-    //% block="gamepad|set button %button to %state"
+    //% blockId="bluetooth_gamepad_set_button_state"
+    //% block="gamepad|set button %button|to %state"
     //% parts="bluetooth"
     //% shim=bluetooth::gamepadButton
     //% advanced=true
     export function setGamepadButton(button: GamepadButton, state: ButtonState) {
-        return;
     }
 
     /**
@@ -28,7 +27,7 @@ namespace bluetooth {
     //% blockId="button" block="%button"
     //% advanced=true
     export function button(button: GamepadButton): GamepadButton {
-        return button;
+        return button
     }
 
     /**
@@ -38,6 +37,6 @@ namespace bluetooth {
     //% blockId="buttonState" block="%buttonState"
     //% advanced=true
     export function buttonState(buttonState: ButtonState): ButtonState {
-        return buttonState;
+        return buttonState
     }
 }

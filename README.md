@@ -1,7 +1,5 @@
 # bluetooth-gamepad
 
-**Work in progress**
-
 This PXT package allows the micro:bit to act as a Gamepad peripheral.
 
 ## Usage
